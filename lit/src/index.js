@@ -47,7 +47,7 @@ import { LitAbility, LitActionResource } from "@lit-protocol/auth-helpers";
     },
   ];
 
-  const authNeededCallback = async ({ chain, resources, expiration, uri }) => {
+  const authNeededCallback = async ({ resources, expiration, uri }) => {
     const wallet = getWallet();
     const domain = "localhost:3000";
     const message = new siwe.SiweMessage({
@@ -86,7 +86,7 @@ import { LitAbility, LitActionResource } from "@lit-protocol/auth-helpers";
       accessControlConditions,
       ciphertext,
       dataToEncryptHash,
-      authSig: sessionSigs,
+      sessionSigs: sessionSigs,
       chain: "ethereum",
     },
     client
