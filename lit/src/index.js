@@ -2,6 +2,7 @@ import * as LitJsSdk from "@lit-protocol/lit-node-client-nodejs";
 import { LitContracts } from "@lit-protocol/contracts-sdk";
 import { ethers } from "ethers";
 import siwe from "siwe";
+import { LitAbility, LitActionResource } from "@lit-protocol/auth-helpers";
 
 (async () => {
   const client = new LitJsSdk.LitNodeClientNodeJs({
@@ -9,7 +10,7 @@ import siwe from "siwe";
   });
   await client.connect();
 
-  const authSig = await getAuthSig();
+  const authSig = await getAuthSig(client);
 
   const accessControlConditions = [
     {
@@ -35,12 +36,57 @@ import siwe from "siwe";
     client
   );
 
+  const resourceAbilityRequests = [
+    {
+      resource: new LitActionResource("*"),
+      ability: LitAbility.LitActionExecution,
+    },
+    {
+      resource: new LitActionResource("*"),
+      ability: LitAbility.AccessControlConditionDecryption,
+    },
+  ];
+
+  const authNeededCallback = async ({ chain, resources, expiration, uri }) => {
+    const wallet = getWallet();
+    const domain = "localhost:3000";
+    const message = new siwe.SiweMessage({
+      domain,
+      address: wallet.address,
+      statement: "Sign a session key to use with Lit Protocol",
+      uri,
+      version: "1",
+      chainId: "1",
+      expirationTime: expiration,
+      resources,
+      nonce: await client.getLatestBlockhash(),
+    });
+    const toSign = message.prepareMessage();
+    const signature = await wallet.signMessage(toSign);
+
+    const authSig = {
+      sig: signature,
+      derivedVia: "web3.eth.personal.sign",
+      signedMessage: toSign,
+      address: wallet.address,
+    };
+
+    return authSig;
+  };
+
+  const sessionSigs = await client.getSessionSigs({
+    chain: "ethereum",
+    resourceAbilityRequests,
+    authNeededCallback,
+    capacityDelegationAuthSig: await getCapacityDelegationAuthSig(client),
+  });
+
   const decryptedString = await LitJsSdk.decryptToString(
     {
       accessControlConditions,
       ciphertext,
       dataToEncryptHash,
-      authSig: await getCapacityDelegationAuthSig(client),
+      authSig: sessionSigs,
       chain: "ethereum",
     },
     client
@@ -48,10 +94,12 @@ import siwe from "siwe";
   console.log("decryptedString", decryptedString);
 })();
 
-async function getAuthSig() {
+async function getAuthSig(client) {
   const wallet = getWallet();
   const address = ethers.getAddress(await wallet.getAddress());
-  const messageToSign = (await getSiweMessage(address)).prepareMessage();
+  const messageToSign = (
+    await getSiweMessage(client, address)
+  ).prepareMessage();
   const signature = await wallet.signMessage(messageToSign);
 
   return {
@@ -72,7 +120,7 @@ function getWallet() {
   return new ethers.Wallet(getPrivateKey());
 }
 
-async function getSiweMessage(address) {
+async function getSiweMessage(client, address) {
   const domain = "localhost";
   const origin = "https://localhost/login";
   const statement =
@@ -90,7 +138,7 @@ async function getSiweMessage(address) {
     uri: origin,
     version: "1",
     chainId: 1,
-    nonce: await litNodeClient.getLatestBlockhash(),
+    nonce: await client.getLatestBlockhash(),
     expirationTime,
   });
 }
