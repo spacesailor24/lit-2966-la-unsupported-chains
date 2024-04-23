@@ -40,7 +40,7 @@ import siwe from "siwe";
       accessControlConditions,
       ciphertext,
       dataToEncryptHash,
-      authSig: await getCapacityDelegationAuthSig(),
+      authSig: await getCapacityDelegationAuthSig(client),
       chain: "ethereum",
     },
     client
@@ -95,7 +95,7 @@ async function getSiweMessage(address) {
   });
 }
 
-async function getCapacityDelegationAuthSig() {
+async function getCapacityDelegationAuthSig(client) {
   const contractClient = new LitContracts({
     privateKey: getPrivateKey(),
     network: "habanero",
