@@ -425,7 +425,7 @@
   dependencies:
     ajv "^8.12.0"
 
-"@lit-protocol/auth-helpers@5.0.0", "@lit-protocol/auth-helpers@^5.0.0":
+"@lit-protocol/auth-helpers@5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@lit-protocol/auth-helpers/-/auth-helpers-5.0.0.tgz#74c028b7314abfcee0a42f184d6a0373e574cfc0"
   integrity sha512-uiTUwhxyzUe7h57i4KhJjL96XP0PcxSufpBq2Z2XjEzWD3ns6ruyy7fWpB7wseR0ePzW3kegEz8fuzhl/HtTfQ==
@@ -456,7 +456,7 @@
     siwe-recap "0.0.2-alpha.0"
     tslib "^2.3.0"
 
-"@lit-protocol/contracts-sdk@5.0.0", "@lit-protocol/contracts-sdk@^5.0.0":
+"@lit-protocol/contracts-sdk@5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@lit-protocol/contracts-sdk/-/contracts-sdk-5.0.0.tgz#67e0fe63b4a33334a478a300c9a09d6deb2fe04e"
   integrity sha512-OhBmloF5GO2UhyFPggE2/FCaH//hfouTOWam9YqAqTFrfVH7DR6SIJYzOdGApX1YEm7Gf/QoBLyjV0wSMMXx8g==
