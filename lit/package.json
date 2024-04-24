@@ -4,17 +4,15 @@
   "description": "An example of using Lit Actions to provide access control using unsupported chains",
   "license": "MIT",
   "type": "module",
+  "scripts": {
+    "build": "rollup -c"
+  },
   "dependencies": {
+    "@lit-protocol/auth-helpers": "^5.0.0",
     "@lit-protocol/contracts-sdk": "^5.0.0",
     "@lit-protocol/lit-node-client-nodejs": "^5.0.0",
     "@stellar/stellar-sdk": "^11.3.0",
     "ethers": "^6.12.0",
     "siwe": "^2.3.2"
-  },
-  "devDependencies": {
-    "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "rollup": "^4.16.3"
   }
 }
