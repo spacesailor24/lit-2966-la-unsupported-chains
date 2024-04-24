@@ -36,8 +36,15 @@ const go = async (number) => {
       preparedTransaction
     );
 
-    console.log("Result", simulatedResponse.result.retval._value);
-    return simulatedResponse.result.retval._value;
+    const parsedReturnVal = StellarSdk.scValToNative(
+      simulatedResponse.result.retval,
+      {
+        type: "bool",
+      }
+    );
+
+    console.log("Result", parsedReturnVal);
+    return parsedReturnVal;
   } catch (e) {
     console.log(e);
     Lit.Actions.setResponse({ response: JSON.stringify(e) });
@@ -45,4 +52,4 @@ const go = async (number) => {
   return false;
 };
 
-go();
+go(42);
