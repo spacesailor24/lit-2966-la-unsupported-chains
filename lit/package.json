@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "rollup -c"
+    "build": "deno bundle src/litAction_always_true.js dist/deno_bundle.js"
   },
   "dependencies": {
     "@lit-protocol/auth-helpers": "^5.0.0",
