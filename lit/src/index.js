@@ -12,11 +12,11 @@ import siwe from "siwe";
 
   const accessControlConditions = [
     {
-      contractAddress: "ipfs://QmV9SWai24x2uac9jVjkDkrbmN41My3qJCcBUa3pxnymsU",
+      contractAddress: "ipfs://QmR3vv9SP35VUx43nhSLkQ9tUhTmzVFZt2a3tP8GDNB3wJ",
       standardContractType: "LitAction",
       chain: "ethereum",
       method: "go",
-      parameters: [],
+      parameters: ["42"],
       returnValueTest: {
         comparator: "=",
         value: "true",
@@ -34,17 +34,17 @@ import siwe from "siwe";
     client
   );
 
-  // const decryptedString = await LitJsSdk.decryptToString(
-  //   {
-  //     accessControlConditions,
-  //     ciphertext,
-  //     dataToEncryptHash,
-  //     authSig,
-  //     chain: "ethereum",
-  //   },
-  //   client
-  // );
-  // console.log("decryptedString", decryptedString);
+  const decryptedString = await LitJsSdk.decryptToString(
+    {
+      accessControlConditions,
+      ciphertext,
+      dataToEncryptHash,
+      authSig,
+      chain: "ethereum",
+    },
+    client
+  );
+  console.log("decryptedString", decryptedString);
 })();
 
 async function getAuthSig(client) {

@@ -12,7 +12,7 @@ const go = async () => {
     );
 
     const contractAddress =
-      "CDBYJCHUJSPHHRIKGJSUEMV4XELXQFZE6HOBW5CIB4EDVZPKPRJKFIAN";
+      "CCIRVLI5WAHVPOU5FXHWPKVTMBCADQFXGJS4ACSUBKT55GCOPTGN5KPQ";
     const contract = new StellarSdk.Contract(contractAddress);
 
     const sourceAccount = await server.getAccount(sourceKeypair.publicKey());
@@ -52,6 +52,7 @@ const go = async () => {
     }
   } catch (e) {
     console.log(e);
+    Lit.Actions.setResponse({ response: JSON.stringify(e) });
   }
   return false;
 };
