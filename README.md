@@ -1,6 +1,63 @@
-# Gate Keeping Lit Decryption by Reading from an Unsupported Chain
+# Gate Keeping Lit Decryption by Reading from an Unsupported Chain <!-- omit from toc -->
 
 Currently Stellar is not one of the [listed supported chains](https://developer.litprotocol.com/v2/resources/supportedchains#:~:text=Our%20Access%20Control%20Protocol%20supports,the%20Cosmos%20ecosystem%2C%20and%20Solana.) by Lit. This repo provides an example of how you can use a Lit Action to make a call to Stellar's network to determine whether or not a user is allowed to decrypt some data encrypted using Lit.
+
+## Table of Contents <!-- omit from toc -->
+
+- [Running this Example](#running-this-example)
+- [How This Example Works](#how-this-example-works)
+  - [`lit` Directory](#lit-directory)
+    - [`src/index.js`](#srcindexjs)
+      - [Connecting the Lit Habanero Network](#connecting-the-lit-habanero-network)
+      - [Creating an Auth Signature](#creating-an-auth-signature)
+      - [Creating Our Access Control Conditions](#creating-our-access-control-conditions)
+      - [Encrypting Our String](#encrypting-our-string)
+      - [Decrypting Our String](#decrypting-our-string)
+    - [`src/litAction_simulate.js`](#srclitaction_simulatejs)
+      - [Creating a Stellar Keypair](#creating-a-stellar-keypair)
+      - [Creating a Soroban Server and Stellar Contract Instance](#creating-a-soroban-server-and-stellar-contract-instance)
+      - [Creating Our Stellar Transaction](#creating-our-stellar-transaction)
+      - [Simulating Transaction Execution](#simulating-transaction-execution)
+      - [Parsing and Returning the Transaction Return Value](#parsing-and-returning-the-transaction-return-value)
+      - [Wrapping Everything in a Try/Catch](#wrapping-everything-in-a-trycatch)
+  - [`stellar-contracts` Directory](#stellar-contracts-directory)
+    - [Deploying the Contract to Stellar Testnet](#deploying-the-contract-to-stellar-testnet)
+    - [Verifying the smart contract Works as Intended](#verifying-the-smart-contract-works-as-intended)
+
+## Running this Example
+
+1. `git clone git@github.com:spacesailor24/lit-2966-la-unsupported-chains.git`
+2. [Deploy an instance](#deploying-the-contract-to-stellar-testnet) of the `IsMagicNumberContract` Stellar smart contract
+3. Copy the resulting contract address into [`litAction_simulate.js`](./lit/src/litAction_simulate.js)
+4. `cd` into the `lit` directory and install the dependencies with `yarn`
+5. Run the `build` script to bundle the Lit Action code for deployment: `yarn build`
+6. Upload and pin the resulting `lit/dist/litAction_simulate.js` file to IPFS
+   - See [this guide](https://www.pinata.cloud/blog/how-do-i-upload-files-to-ipfs) for assistance
+7. Update the IPFS URI in [`index.js`](./lit/src/index.js):
+   ```javascript
+   const accessControlConditions = [
+     {
+       contractAddress: "ipfs://QmcyrxqaLSDjYZpxJUQ3521fUfnVr86bSvLHRZHiaPhMyY",
+       // rest of the code...
+     },
+   ];
+   ```
+8. Run the example by executing [`index.js`](./lit/src/index.js): `PRIVATE_KEY=<your-private-key> node src/index.js`
+   - **NOTE** Running the example requires you to have an Ethereum private key which has a [Capacity Credit](https://developer.litprotocol.com/v3/sdk/capacity-credits) minted for it. You can do this using the [Lit Explorer](https://explorer.litprotocol.com/get-credits)
+   - You will see a bunch of output to the console as the Lit SDK connect to the network and the decryption request is sent and executed, but at the very end you should see:
+   ```
+   decryptedString the answer to life, the universe, and everything is 42
+   ```
+   which demonstrates the successful decryption of our data. To see what happens when authorization fails, you can update the `parameters` in our `accessControlConditions` to anything other than `42`:
+   ```javascript
+   const accessControlConditions = [
+     {
+       // Changing this to any number other than `42` will result in failure
+       parameters: ["24"],
+       // rest of the code...
+     },
+   ];
+   ```
 
 ## How This Example Works
 
@@ -164,7 +221,7 @@ If all the `returnValueTest`s pass, then each Lit Node will provide a [private k
 
 ##### Creating a Stellar Keypair
 
-This file, containing our Lit Action code, has a single function which will use the Stellar testnet to simulate a transaction that invokes our Stellar Smart Contract in order to determine whether or not it should return `true` or `false`, effectively authorizing our callee to decrypt our data.
+This file, containing our Lit Action code, has a single function which will use the Stellar testnet to simulate a transaction that invokes our Stellar smart contract in order to determine whether or not it should return `true` or `false`, effectively authorizing our callee to decrypt our data.
 
 There are some constraints of the Stellar network that differ from how typical EVM chains function that influence the design of our Lit Action. Stellar requires all calls to submit or simulate a transaction to the network be signed, even if we're invoking a readonly smart contract function.
 
@@ -328,7 +385,7 @@ This smart contract is deployed to the Stellar testnet which is periodically res
    CCIRVLI5WAHVPOU5FXHWPKVTMBCADQFXGJS4ACSUBKT55GCOPTGN5KPQ
    ```
 
-#### Verifying the Smart Contract Works as Intended
+#### Verifying the smart contract Works as Intended
 
 You can manually call the smart contract functions to verify it's working as intended:
 
