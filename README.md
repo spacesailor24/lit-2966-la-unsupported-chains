@@ -160,6 +160,129 @@ This code is what's responsible for making a request to Lit to execute our Lit A
 
 If all the `returnValueTest`s pass, then each Lit Node will provide a [private key share](https://developer.litprotocol.com/v3/resources/glossary#private-key-share) that will be used to decrypt our data. Once we have enough key shares to meet the threshold for decryption, the Lit SDK will use the decryption key to decrypt our `ciphertext` and we'll get our original data `console.log`ed.
 
+#### [`src/litAction_simulate.js`](./lit/src/litAction_simulate.js)
+
+##### Creating a Stellar Keypair
+
+This file, containing our Lit Action code, has a single function which will use the Stellar testnet to simulate a transaction that invokes our Stellar Smart Contract in order to determine whether or not it should return `true` or `false`, effectively authorizing our callee to decrypt our data.
+
+There are some constraints of the Stellar network that differ from how typical EVM chains function that influence the design of our Lit Action. Stellar requires all calls to submit or simulate a transaction to the network be signed, even if we're invoking a readonly smart contract function.
+
+Currently, Lit support for the `ed25519` signature scheme is in progress, so we must use the Stellar SDK to perform the signing of our transaction - this is why the first line of our Lit Action is creating a Stellar keypair from a hardcoded secret:
+
+```javascript
+const sourceKeypair = StellarSdk.Keypair.fromSecret(
+  "SCQN3XGRO65BHNSWLSHYIR4B65AHLDUQ7YLHGIWQ4677AZFRS77TCZRB"
+);
+```
+
+Of course making our secret publicly known is not ideal. Because we cannot use the Lit Network to perform `ed25519` signature needed to create a signed Stellar transaction, our other two options are:
+
+1. Provide the secret as a input parameter to the Lit Action
+   - This option would at least keep who knows the secret to only the Lit Nodes that process our decryption request
+2. Provide a pre-signed transaction to the Lit Action
+   - This would mean the secret can be kept private, however our Lit Action now acts as a Stellar gateway and doesn't enforce the Stellar smart contract we interact with to aid in authorizing the callee i.e. a signed transaction to any Stellar smart contract that returns true would cause an authorization to occur instead of only a successful execution of our specific smart contract
+   - There maybe an option here to lookup the transaction after execution and check the smart contract address and the function that was executed to enforce it matches our expected address and function name
+
+##### Creating a Soroban Server and Stellar Contract Instance
+
+```javascript
+const server = new StellarSdk.SorobanRpc.Server(
+  "https://soroban-testnet.stellar.org:443"
+);
+
+const contractAddress =
+  "CCIRVLI5WAHVPOU5FXHWPKVTMBCADQFXGJS4ACSUBKT55GCOPTGN5KPQ";
+const contract = new StellarSdk.Contract(contractAddress);
+```
+
+Here we're connecting to the Soraban testnet using the public RPC endpoint, and creating a `StellarSdk.Contract` instance with the contract address we got from deploying the contract in the [Deploying the Contract to Stellar Testnet](#deploying-the-contract-to-stellar-testnet) section.
+
+##### Creating Our Stellar Transaction
+
+```javascript
+const sourceAccount = await server.getAccount(sourceKeypair.publicKey());
+let builtTransaction = new StellarSdk.TransactionBuilder(sourceAccount, {
+  fee: "100",
+  networkPassphrase: StellarSdk.Networks.TESTNET,
+})
+  .addOperation(
+    contract.call(
+      "is_magic_number",
+      StellarSdk.nativeToScVal(parseInt(number), { type: "u32" })
+    )
+  )
+  .setTimeout(90)
+  .build();
+```
+
+Here we're using the `publicKey` from our `sourceKeypair` to derive our Stellar address. Then we begin constructing the transaction to the Stellar testnet.
+
+```javascript
+.addOperation(
+    contract.call(
+      "is_magic_number",
+      StellarSdk.nativeToScVal(parseInt(number), { type: "u32" })
+    )
+  )
+```
+
+Here is where we're setting what contract method we're calling and passing in the `number` parameter given to us by the Lit Action which gets it from `parameters` in the Access Control Conditions we created early when encrypting our data:
+
+```javascript
+const accessControlConditions = [
+  {
+    contractAddress: "ipfs://QmcyrxqaLSDjYZpxJUQ3521fUfnVr86bSvLHRZHiaPhMyY",
+    standardContractType: "LitAction",
+    chain: "ethereum",
+    method: "go",
+    parameters: ["42"], // <--- This gets passed into our Lit Action as the `number` parameter
+    returnValueTest: {
+      comparator: "=",
+      value: "true",
+    },
+  },
+];
+```
+
+##### Simulating Transaction Execution
+
+```javascript
+let preparedTransaction = await server.prepareTransaction(builtTransaction);
+preparedTransaction.sign(sourceKeypair);
+
+let simulatedResponse = await server.simulateTransaction(preparedTransaction);
+```
+
+Next we prepare the transaction for signing, sign it, and submit a request to the Stellar network to simulate our transaction execution. Ideally we'd actually submit the transaction, as shown in [`litAction_submit.js`](./lit/src/litAction_submit.js), but there's an issue with each Lit Node trying to submit a transaction from the same account at the same time. A potential workaround for this is deriving the Stellar secret from something unique to Lit Node when executing the Lit Action.
+
+##### Parsing and Returning the Transaction Return Value
+
+```javascript
+const parsedReturnVal = StellarSdk.scValToNative(
+  simulatedResponse.result.retval
+);
+
+console.log("Result", parsedReturnVal);
+return parsedReturnVal;
+```
+
+Lastly, we parse the return value of our transaction simulation and return it from the Lit Action. If the provided `number` value satisfies the constraint of our `is_magic_number` method, our Lit Action will return `true`, authorizing our decryption request. Otherwise, `false` will be returned and our decryption request will be denied by the Lit Network.
+
+##### Wrapping Everything in a Try/Catch
+
+```javascript
+try {
+  // The above code...
+} catch (e) {
+  console.log(e);
+  Lit.Actions.setResponse({ response: JSON.stringify(e) });
+}
+return false;
+```
+
+One thing to notice here is the logic of our Lit Action is wrapped in a `try/catch`. This means that if any of the Lit Action logic `throws`, we'll `catch` it and return `false` to deny encryption. If there is an `error`, `Lit.Actions.setResponse({ response: JSON.stringify(e) });` will set it as the request response for debugging/context purposes.
+
 ### `stellar-contracts` Directory
 
 This directory contains the [Rust Stellar smart contract](./stellar-contracts/contracts/is_magic_number/src/lib.rs) with two functions:
