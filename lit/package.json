@@ -5,8 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build:simulate": "deno bundle src/litAction_simulate.js dist/deno_bundle_simulate.js",
-    "build:submit": "deno bundle src/litAction_submit.js dist/deno_bundle_submit.js"
+    "build": "deno task bundle"
   },
   "dependencies": {
     "@kitsonk/xhr": "npm:@jsr/kitsonk__xhr@^0.4.3",

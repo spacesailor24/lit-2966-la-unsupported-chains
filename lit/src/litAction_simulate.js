@@ -1,5 +1,5 @@
 import "jsr:/@kitsonk/xhr";
-import "https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/11.3.0/stellar-sdk.js";
+import * as StellarSdk from "https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/11.3.0/stellar-sdk.js";
 
 const go = async (number) => {
   try {
@@ -49,4 +49,4 @@ const go = async (number) => {
   return false;
 };
 
-go(42);
+go();

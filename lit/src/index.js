@@ -12,7 +12,7 @@ import siwe from "siwe";
 
   const accessControlConditions = [
     {
-      contractAddress: "ipfs://QmQsGYTwvQhr1XRdSJxwCZSYPrVZpqVbG2RvkUxXkMibMu",
+      contractAddress: "ipfs://QmcyrxqaLSDjYZpxJUQ3521fUfnVr86bSvLHRZHiaPhMyY",
       standardContractType: "LitAction",
       chain: "ethereum",
       method: "go",
