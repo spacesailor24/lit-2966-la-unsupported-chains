@@ -37,10 +37,7 @@ const go = async (number) => {
     );
 
     const parsedReturnVal = StellarSdk.scValToNative(
-      simulatedResponse.result.retval,
-      {
-        type: "bool",
-      }
+      simulatedResponse.result.retval
     );
 
     console.log("Result", parsedReturnVal);
