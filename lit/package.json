@@ -9,9 +9,12 @@
   },
   "dependencies": {
     "@kitsonk/xhr": "npm:@jsr/kitsonk__xhr@^0.4.3",
+    "@lit-protocol/auth-helpers": "^5.0.0",
+    "@lit-protocol/contracts-sdk": "^5.0.0",
     "@lit-protocol/lit-node-client-nodejs": "^5.0.0",
     "@stellar/stellar-sdk": "^11.3.0",
     "ethers": "^6.12.0",
+    "node-localstorage": "^3.0.5",
     "siwe": "^2.3.2"
   },
   "devDependencies": {
